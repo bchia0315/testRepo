@@ -50,7 +50,6 @@ class MemoryCacheTests {
         assertCachedEquals(cache, "b", b);
 
         // Should be able to keep reading the items; they shouldn't be evicted.
-
         assertCachedEquals(cache, "a", a);
         assertCachedEquals(cache, "b", b);
 
@@ -74,7 +73,6 @@ class MemoryCacheTests {
         MemoryCache<String> cache = new MemoryCache(3);
 
         // Add items up to the capacity. All items should be retained.
-
         String a = "A";
         String b = "B";
         String c = "C";
@@ -82,10 +80,11 @@ class MemoryCacheTests {
         cache.set("a", a);
         cache.set("b", b);
         cache.set("c", c);
+        //c, b, a
 
-        assertCachedEquals(cache, "a", a);
-        assertCachedEquals(cache, "b", b);
-        assertCachedEquals(cache, "c", c);
+        assertCachedEquals(cache, "a", a); //a, c, b
+        assertCachedEquals(cache, "b", b); //b, a ,c
+        assertCachedEquals(cache, "c", c); // c, b, a
 
         // Access the items in some different order.
 
@@ -102,6 +101,8 @@ class MemoryCacheTests {
         String d = "D";
 
         cache.set("d", d);
+
+        // d, c, b, a
 
         assertNotInCache(cache, "b");
 
