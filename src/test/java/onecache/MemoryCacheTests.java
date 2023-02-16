@@ -136,8 +136,26 @@ class MemoryCacheTests {
      * TODO: Test expiry.
      */
     @Test
-    @Disabled
     void expiry() {
         // TODO: Implement!
+        MemoryCache cache = new MemoryCache();
+
+        // We should be able to add items to the cache, then retrieve them.
+
+        String a = "A";
+        String b = "B";
+        String c = "C";
+
+        cache.set("a", a, 10);
+        cache.set("b", b, 0);
+        cache.set("c", c, 1000000);
+
+
+        // Test if item has expired and is not in the cache
+        assertCachedEquals(cache, "b", b);
+        assertNotInCache(cache, a);
+
+        // Test if item has NOT exsipred and is in the cache
+        assertCachedEquals(cache, "c", c);
     }
 }

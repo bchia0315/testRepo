@@ -1,8 +1,12 @@
 package onecache;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
+
 
 public class MemoryCache<T> implements Cache<T> {
 
@@ -27,10 +31,15 @@ public class MemoryCache<T> implements Cache<T> {
     private class Item {
         final String key;
         final T value;
+        final long expireAfterMS;
+        final LocalDateTime insertTime;
 
-        private Item(String key, T value) {
+        private Item(String key, T value, long expireAfterMS) {
             this.key = key;
             this.value = value;
+            this.expireAfterMS = expireAfterMS;
+            this.insertTime = LocalDateTime.now();
+
         }
     }
 
@@ -67,6 +76,25 @@ public class MemoryCache<T> implements Cache<T> {
 
         // TODO: Check for expiry, and clear if expired.
 
+        //1. Grab the NOW dateTime
+        //2. Find the difference between the NOW and the insert time
+        //3. Compare the difference to the itemExpired
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime insertTime = item.insertTime;
+
+        //What does the return look like (+, -)
+        long gapBetweenInsert = ChronoUnit.MILLIS.between(insertTime,now);
+
+        if (item.expireAfterMS != 0) {
+            long expire = item.expireAfterMS;
+
+            if (gapBetweenInsert > expire) {
+                this.itemsByKey.remove(key);
+                return new CacheResult<T>(false, null);
+            }
+        }
+
+
         // Mark as most recently read.
         this.mostRecentlyReadKeys.remove(key);
         this.mostRecentlyReadKeys.addFirst(key);
@@ -98,7 +126,7 @@ public class MemoryCache<T> implements Cache<T> {
     public synchronized void set(String key, T value, long expireAfterMS) {
         // Add item.
         // TODO: Store expiry too, and clear when expired.
-        Item item = new Item(key, value);
+        Item item = new Item(key, value, expireAfterMS);
         this.mostRecentlyReadKeys.addFirst(key);
         this.itemsByKey.put(key, item);
 
@@ -125,5 +153,33 @@ public class MemoryCache<T> implements Cache<T> {
         this.itemsByKey.remove(key);
 
         return true;
+    }
+
+
+    class TestRunnable implements Runnable {
+        public int iterations = 0;
+
+        @Override
+        public void run() {
+            this.iterations++;
+        }
+
+        public void runDefaultScheduler (Map<String, Item> itemsMap) {
+            Set<String> allItems = itemsMap.keySet();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime insertTime = item.insertTime;
+
+            //TODO: Need to grab the item using itemsMap.get(key)
+//            for (String it : allItems) {
+//                long gapBetweenInsert = ChronoUnit.MILLIS.between(insertTime,now);
+//
+//                if (item.expireAfterMS != 0) {
+//                    long expire = item.expireAfterMS;
+//
+//                    if (gapBetweenInsert > expire) {
+//                        this.itemsByKey.remove(key);
+//                    }
+//                }
+//            }
     }
 }
